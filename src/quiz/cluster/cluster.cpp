@@ -75,12 +75,59 @@ void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Bo
 
 }
 
+void clusterHelper(int index,const std::vector<std::vector<float>> points,std::vector<int>& cluster,std::vector<bool>& processed,KdTree* tree,float distanceTol)
+{
+	//mark point as processed 
+	processed[index] = true;
+	//add point to cluster 
+	cluster.push_back(index);
+	//get nearby points 
+	std::vector<int> nearbyPts  = tree->search(points[index], distanceTol);
+	//iterate through each nearby point 
+	for(int id:nearbyPts)
+	{
+		if(!processed[id])
+		//recursively call the helper for unprocessed points 
+			clusterHelper(id, points, cluster, processed, tree, distanceTol );
+	}
+
+
+
+}
+
 std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
 {
 
 	// TODO: Fill out this function to return list of indices for each cluster
 
+	//create a list of clusters
 	std::vector<std::vector<int>> clusters;
+
+	//create a vector for processed points . type: bool
+	std::vector<bool> processed(points.size(), false);
+
+	int i=0;
+	//iterate through each point
+	while (i<points.size())
+	{
+		if(processed[i])
+		{
+			i++;
+			continue;
+		}
+
+		//acc. to the algo -->
+		//if the point has not been processed, 
+		//create a cluster 
+		std::vector<int> cluster;
+
+		//Proximity (point, cluster)-> implement this using clusterhelper
+		clusterHelper(i, points, cluster, processed, tree, distanceTol);
+
+		//cluster add clusters 
+		clusters.push_back(cluster);
+		i++;
+	}
  
 	return clusters;
 
@@ -100,8 +147,9 @@ int main ()
 	pcl::visualization::PCLVisualizer::Ptr viewer = initScene(window, 25);
 
 	// Create data
-	//std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3}, {7.2,6.1}, {8.0,5.3}, {7.2,7.1}, {0.2,-7.1}, {1.7,-6.9}, {-1.2,-7.2}, {2.2,-8.9} };
-	std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3} };
+	std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3}, {7.2,6.1}, {8.0,5.3}, {7.2,7.1}, {0.2,-7.1}, {1.7,-6.9}, {-1.2,-7.2}, {2.2,-8.9} };
+	//std::vector<std::vector<float>> points = { {-6.2,7}, {-6.3,8.4}, {-5.2,7.1}, {-5.7,6.3} };
+	//std::vector<std::vector<float>> points = { {1,1}, {2,2}, {3,3}, {4,4} };
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData(points);
 
 	KdTree* tree = new KdTree;
@@ -111,6 +159,12 @@ int main ()
 
   	int it = 0;
   	render2DTree(tree->root,viewer,window, it);
+  
+  	std::cout << "Test Search" << std::endl;
+  	std::vector<int> nearby = tree->search({-6,7},3.0);
+  	for(int index : nearby)
+      std::cout << index << ",";
+  	std::cout << std::endl;
 
   	// Time segmentation process
   	auto startTime = std::chrono::steady_clock::now();

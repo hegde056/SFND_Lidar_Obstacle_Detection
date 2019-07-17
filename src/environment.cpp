@@ -145,10 +145,10 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer , ProcessPointClou
     //-----------------------------
     //--KD tree and euclidean clustering for project ---
     //-----------------------------
-	KdTree* tree = new KdTree;
+	// KdTree* tree = new KdTree;
   
-    for (int i=0; i<segmentCloud.first->points.size(); i++) 
-    	tree->insert(segmentCloud.first->points[i],i); 
+    // for (int i=0; i<segmentCloud.first->points.size(); i++) 
+    // 	tree->insert(segmentCloud.first->points[i],i); 
 
 
 

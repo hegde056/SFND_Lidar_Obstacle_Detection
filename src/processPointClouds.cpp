@@ -278,6 +278,130 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     return clusters;
 }
 
+template<typename PointT>
+void ProcessPointClouds<PointT>::clusterHelper(int index,const std::vector<std::vector<float>> points,std::vector<int>& cluster,std::vector<bool>& processed,KdTree* tree,float distanceTol)
+{
+	//mark point as processed 
+	processed[index] = true;
+	//add point to cluster 
+	cluster.push_back(index);
+	//get nearby points 
+	std::vector<int> nearbyPts  = tree->search(points[index], distanceTol);
+	//iterate through each nearby point 
+	for(int id:nearbyPts)
+	{
+		if(!processed[id])
+		//recursively call the helper for unprocessed points 
+			clusterHelper(id, points, cluster, processed, tree, distanceTol );
+	}
+
+
+
+}
+
+template<typename PointT>
+std::vector<std::vector<int>> ProcessPointClouds<PointT>::euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol, int  minSize,int maxSize)
+{
+
+	// TODO: Fill out this function to return list of indices for each cluster
+
+	//create a list of clusters
+	std::vector<std::vector<int>> clusters;
+
+	//create a vector for processed points . type: bool
+	std::vector<bool> processed(points.size(), false);
+
+	int i=0;
+	//iterate through each point
+	while (i<points.size())
+	{
+		if(processed[i])
+		{
+			i++;
+			continue;
+		}
+
+		//acc. to the algo -->
+		//if the point has not been processed, 
+		//create a cluster 
+		std::vector<int> cluster;
+
+		//Proximity (point, cluster)-> implement this using clusterhelper
+		clusterHelper(i, points, cluster, processed, tree, distanceTol);
+        if(cluster.size()>=minSize && cluster.size()<=maxSize)
+        {
+		    //cluster add clusters 
+		    clusters.push_back(cluster);
+        }
+
+		i++;
+	}
+ 
+	return clusters;
+
+}
+
+
+template<typename PointT>
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::eucledianClustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
+{
+
+    // Time clustering process
+    auto startTime = std::chrono::steady_clock::now();
+
+    std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+
+    std::vector<std::vector<float>> points;
+    std::vector<float> point(3);
+    for(int index = 0; index < cloud->points.size(); index++)
+        {
+            point[0] = cloud->points[index].x;
+            point[1] = cloud->points[index].y;
+            point[2] = cloud->points[index].z;
+            points.push_back(point);
+            
+        } 
+
+    //points visualization
+    // for(int index = 0; index < points.size(); index++)
+    //     {
+    //         std::cout<<" {";
+    //         for(int i = 0; i < points[index].size(); i++) 
+    //         {
+    //             std::cout<<points[index].at(i)<<','; 
+    //         }
+    //         std::cout<<" }";
+    //     }
+
+	KdTree* tree = new KdTree;
+    tree->kDim = 3;
+    for (int i=0; i<points.size(); i++) 
+    	tree->insert(points[i],i);
+
+    std::vector<std::vector<int>> clusterIndices = euclideanCluster(points, tree, clusterTolerance , minSize, maxSize);
+  	
+
+  	for(std::vector<int> cluster : clusterIndices)
+  	{
+  		typename pcl::PointCloud<PointT>::Ptr clusterCloud(new pcl::PointCloud<PointT>());
+  		for(std::vector<int>::const_iterator itr  = cluster.begin(); itr != cluster.end(); ++itr)
+  			clusterCloud->points.push_back(cloud->points[*itr]);
+        clusterCloud->width = clusterCloud->points.size ();
+        clusterCloud->height = 1;
+        clusterCloud->is_dense = true;
+    
+        clusters.push_back(clusterCloud);
+
+  	}
+
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size() << " clusters" << std::endl;
+
+    return clusters;
+}
+
 
 template<typename PointT>
 Box ProcessPointClouds<PointT>::BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster)

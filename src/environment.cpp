@@ -95,6 +95,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer)
     renderPointCloud(viewer,segmentCloud.second,"planeCloud",Color(0,1,0));
 
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.4, 10, 300);
+    //std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->eucledianClustering(segmentCloud.first, 0.4, 10, 300);
 
     int clusterId = 0;
     std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(0,0,1)};
@@ -121,13 +122,9 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer , ProcessPointClou
   // -----Open 3D viewer and display City Block     -----
   // ----------------------------------------------------
 
-  //ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
-  //pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
-  //renderPointCloud(viewer,inputCloud,"inputCloud");
-
     //FILTERING
     pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.28, Eigen::Vector4f (-10,-5,-2,1), Eigen::Vector4f (30,7,1,1));
-    //renderPointCloud(viewer,filterCloud,"filterCloud");
+    renderPointCloud(viewer,filterCloud,"filterCloud");
 
     //SEGMENTATION
     //std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr,pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud,50,0.3);
@@ -140,21 +137,11 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer , ProcessPointClou
     //-----------------------------
     
     //CLUSTERING
-    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.4, 8, 300);
-
+    //std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.4, 8, 300);
     //-----------------------------
-    //--KD tree and euclidean clustering for project ---
+    //--euclidean clustering  for project ---
     //-----------------------------
-	// KdTree* tree = new KdTree;
-  
-    // for (int i=0; i<segmentCloud.first->points.size(); i++) 
-    // 	tree->insert(segmentCloud.first->points[i],i); 
-
-
-
-
-
-    //-----------------------------
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->eucledianClustering(segmentCloud.first, 0.38, 8, 300);
     int clusterId = 0;
     std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(0,0,1)};
 
@@ -205,6 +192,9 @@ int main (int argc, char** argv)
     initCamera(setAngle, viewer);
     //simpleHighway(viewer); 
   	//cityBlock(viewer); //single frame PCD
+
+
+     //stream PCD 
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
     std::vector<boost::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_1");
     auto streamIterator = stream.begin();
@@ -214,6 +204,7 @@ int main (int argc, char** argv)
 
     while (!viewer->wasStopped ())
     {
+        //stream PCD 
         //clear viewer
         viewer->removeAllPointClouds();
         viewer->removeAllShapes();

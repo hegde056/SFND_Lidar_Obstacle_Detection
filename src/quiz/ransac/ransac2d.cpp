@@ -223,16 +223,16 @@ int main ()
 
 	// Create data
 	//for 2d
-	//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData();
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData();
 	//for 3d
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData3D();
+	//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData3D();
 	
 
 	// TODO: Change the max iteration and distance tolerance arguments for Ransac function
 	//for 2D
-	//std::unordered_set<int> inliers = Ransac(cloud, 50, 1.0);
+	std::unordered_set<int> inliers = Ransac(cloud, 50, 1.0);
 	//for 3D
-	std::unordered_set<int> inliers = RansacPlane(cloud, 50, 0.2);
+	//std::unordered_set<int> inliers = RansacPlane(cloud, 50, 0.2);
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers(new pcl::PointCloud<pcl::PointXYZ>());
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers(new pcl::PointCloud<pcl::PointXYZ>());
